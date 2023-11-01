@@ -1,4 +1,5 @@
 import tkinter as tk
+from PIL import Image, ImageTk
 import gsw
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -146,5 +147,15 @@ save_button.pack()
 # Sonuç etiketi
 result_label = tk.Label(root, text="Sigma-theta ve Derinlik Grafiği")
 result_label.pack()
+
+# Logo dosyasını yükleyin ve tkinter için uygun hale getirin
+logo_image = Image.open("haliclogo.png")
+# Logo'yu %50 küçült
+logo_image = logo_image.resize((logo_image.width // 2, logo_image.height // 2))
+logo = ImageTk.PhotoImage(logo_image)
+
+# Logo görüntüsünü bir Label widget'e yerleştirin ve sağ alt köşeye yerleştirin
+logo_label = tk.Label(root, image=logo)
+logo_label.pack(side="bottom", anchor="se")
 
 root.mainloop()
