@@ -3,6 +3,7 @@ from PIL import Image, ImageTk
 import gsw
 import matplotlib.pyplot as plt
 import pandas as pd
+import numpy as np
 
 # Tuzla Tersanesi'nin enlem ve boylam koordinatları
 latitude_tuzla = 40.818099
@@ -24,6 +25,16 @@ def create_data_entry_fields(frame, label_text, entry_variable):
     entry = tk.Entry(frame, textvariable=entry_variable)
     entry.pack(side=tk.LEFT)
 
+# Tabakalaşma Derinliği Hesaplama İşlevi
+def calculate_stratification_depth_internal(temperature, salinity, depth):
+    density = gsw.rho(temperature, salinity, depth)
+    stratification_depth = None
+    for i in range(1, len(depth)):
+        if abs(density[i] - density[0]) > 0.1:  # Örnek bir eşik değeri
+            stratification_depth = depth[i]
+            break
+    return stratification_depth
+
 # Sonuçları Excel dosyasına kaydetmek için işlev
 def save_to_excel():
     if depth_values:
@@ -39,13 +50,6 @@ def save_to_excel():
         result_label.config(text="Veriler başarıyla Excel dosyasına kaydedildi.")
     else:
         result_label.config(text="Kaydedilecek veri yok.")
-
-# create_data_entry_fields fonksiyonu
-def create_data_entry_fields(frame, label_text, entry_variable):
-    label = tk.Label(frame, text=label_text)
-    label.pack(side=tk.LEFT)
-    entry = tk.Entry(frame, textvariable=entry_variable)
-    entry.pack(side=tk.LEFT)
 
 # Veri girişi ekranı açma işlevi
 def open_data_entry():
@@ -125,6 +129,22 @@ def update_plots():
     plt.tight_layout()
     plt.show()
 
+# Tabakalaşma Değerlendir düğmesi
+def evaluate_stratification():
+    if depth_values and temperature_values and salinity_values:
+        depth_profile = np.array(depth_values)
+        temperature_profile = np.array(temperature_values)
+        salinity_profile = np.array(salinity_values)
+
+        stratification_depth = calculate_stratification_depth_internal(temperature_profile, salinity_profile, depth_profile)
+
+        if stratification_depth is not None:
+            result_label.config(text=f"Tabakalaşma derinliği: {stratification_depth:.2f} metre")
+        else:
+            result_label.config(text="Tabakalaşma yok veya belirli bir derinlikte başlamış değil.")
+    else:
+        result_label.config(text="Hesaplamak için veri yok.")
+
 # root penceresini oluştur
 root = tk.Tk()
 root.title("Oceanographic Data Analyzer")
@@ -143,6 +163,10 @@ calculate_button.pack()
 # Hesapla ve kaydet düğmesi
 save_button = tk.Button(root, text="Hesapla ve Excel'e Kaydet", command=save_to_excel)
 save_button.pack()
+
+# Tabakalaşma Değerlendir düğmesi
+evaluate_stratification_button = tk.Button(root, text="Tabakalaşma Değerlendir", command=evaluate_stratification)
+evaluate_stratification_button.pack()
 
 # Sonuç etiketi
 result_label = tk.Label(root, text="Sigma-theta ve Derinlik Grafiği")
