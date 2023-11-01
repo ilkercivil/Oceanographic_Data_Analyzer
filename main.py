@@ -13,9 +13,8 @@ temperature_values = []
 salinity_values = []
 
 # Veri giriş alanları
-depth_entries = []
-ppt_entries = []
-temperature_entries = []
+data_entries = []
+
 
 # create_data_entry_fields fonksiyonu
 def create_data_entry_fields(frame, label_text, entry_variable):
@@ -24,27 +23,60 @@ def create_data_entry_fields(frame, label_text, entry_variable):
     entry = tk.Entry(frame, textvariable=entry_variable)
     entry.pack(side=tk.LEFT)
 
-# Hesaplama ve grafik güncelleme fonksiyonu
+
+# Veri girişi ekranı açma işlevi
+def open_data_entry():
+    data_frame = tk.Frame(root)
+    data_frame.pack()
+
+    data_entry_variable_depth = tk.StringVar()
+    data_entry_variable_ppt = tk.StringVar()
+    data_entry_variable_temperature = tk.StringVar()
+
+    create_data_entry_fields(data_frame, "Derinlik (metre):", data_entry_variable_depth)
+    create_data_entry_fields(data_frame, "Tuzluluk (PPT):", data_entry_variable_ppt)
+    create_data_entry_fields(data_frame, "Sıcaklık (°C):", data_entry_variable_temperature)
+
+    data_entries.append((data_entry_variable_depth, data_entry_variable_ppt, data_entry_variable_temperature))
+
+
+# Hesapla düğmesi işlevi
 def calculate_sigma_theta():
-    if not validate_data_entry_fields():
-        return
+    depth_values.clear()
+    sigma_theta_values.clear()
+    temperature_values.clear()
+    salinity_values.clear()
 
-    for i in range(20):
-        depth_value = float(depth_entries[i].get())
-        ppt_value = float(ppt_entries[i].get())
-        temperature_value = float(temperature_entries[i].get())
+    for entry in data_entries:
+        depth_entry, ppt_entry, temperature_entry = entry
+        depth = depth_entry.get().strip()
+        ppt = ppt_entry.get().strip()
+        temperature = temperature_entry.get().strip()
 
-        pressure = gsw.p_from_z(-1 * depth_value, latitude_tuzla)
-        sigma_theta = gsw.sigma0(ppt_value, temperature_value)
+        if depth and ppt and temperature:
+            try:
+                depth_value = float(depth)
+                ppt_value = float(ppt)
+                temperature_value = float(temperature)
 
-        depth_values.append(depth_value)
-        sigma_theta_values.append(sigma_theta)
-        temperature_values.append(temperature_value)
-        salinity_values.append(ppt_value)
+                pressure = gsw.p_from_z(-1 * depth_value, latitude_tuzla)
+                sigma_theta = gsw.sigma0(ppt_value, temperature_value)
+
+                depth_values.append(depth_value)
+                sigma_theta_values.append(sigma_theta)
+                temperature_values.append(temperature_value)
+                salinity_values.append(ppt_value)
+            except ValueError:
+                result_label.config(text="Geçerli verileri girin.")
+                return
+        else:
+            result_label.config(text="Lütfen tüm alanları doldurun.")
+            return
 
     update_plots()
 
-# Grafik güncelleme fonksiyonu
+
+# Grafik güncelleme işlevi
 def update_plots():
     plt.figure(figsize=(12, 6))
 
@@ -72,38 +104,14 @@ def update_plots():
     plt.tight_layout()
     plt.show()
 
-# Veri girişlerini doğrulama fonksiyonu
-def validate_data_entry_fields():
-    for i in range(20):
-        depth_value = depth_entries[i].get()
-        ppt_value = ppt_entries[i].get()
-        temperature_value = temperature_entries[i].get()
-
-        if not (depth_value and ppt_value and temperature_value):
-            result_label.config(text="Lütfen tüm alanları doldurun.")
-            return False
-
-    return True
 
 # root penceresini oluştur
 root = tk.Tk()
 root.title("Oceanographic Data Analyzer")
 
-for i in range(20):
-    frame = tk.Frame(root)
-    frame.pack()
-
-    depth_entry_variable = tk.StringVar()
-    ppt_entry_variable = tk.StringVar()
-    temperature_entry_variable = tk.StringVar()
-
-    create_data_entry_fields(frame, "Derinlik {} (metre):".format(i + 1), depth_entry_variable)
-    create_data_entry_fields(frame, "Tuzluluk {} (PPT):".format(i + 1), ppt_entry_variable)
-    create_data_entry_fields(frame, "Sıcaklık {} (°C):".format(i + 1), temperature_entry_variable)
-
-    depth_entries.append(depth_entry_variable)
-    ppt_entries.append(ppt_entry_variable)
-    temperature_entries.append(temperature_entry_variable)
+# Veri girişi ekranı açma düğmesi
+open_data_entry_button = tk.Button(root, text="Yeni Veri Ekle", command=open_data_entry)
+open_data_entry_button.pack()
 
 # Hesapla düğmesi
 calculate_button = tk.Button(root, text="Hesapla ve Grafikleri Göster", command=calculate_sigma_theta)
