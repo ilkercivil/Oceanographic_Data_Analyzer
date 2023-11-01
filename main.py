@@ -109,6 +109,9 @@ def update_plots():
 root = tk.Tk()
 root.title("Oceanographic Data Analyzer")
 
+# Açılış ekranının boyutunu ayarla
+root.geometry("800x600")
+
 # Veri girişi ekranı açma düğmesi
 open_data_entry_button = tk.Button(root, text="Yeni Veri Ekle", command=open_data_entry)
 open_data_entry_button.pack()
