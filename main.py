@@ -1,6 +1,7 @@
 import tkinter as tk
 import gsw
 import matplotlib.pyplot as plt
+import pandas as pd
 
 # Tuzla Tersanesi'nin enlem ve boylam koordinatları
 latitude_tuzla = 40.818099
@@ -15,7 +16,6 @@ salinity_values = []
 # Veri giriş alanları
 data_entries = []
 
-
 # create_data_entry_fields fonksiyonu
 def create_data_entry_fields(frame, label_text, entry_variable):
     label = tk.Label(frame, text=label_text)
@@ -23,6 +23,28 @@ def create_data_entry_fields(frame, label_text, entry_variable):
     entry = tk.Entry(frame, textvariable=entry_variable)
     entry.pack(side=tk.LEFT)
 
+# Sonuçları Excel dosyasına kaydetmek için işlev
+def save_to_excel():
+    if depth_values:
+        data = {
+            "Derinlik (metre)": depth_values,
+            "Sigma-theta (σθ)": sigma_theta_values,
+            "Sıcaklık (°C)": temperature_values,
+            "Tuzluluk (PPT)": salinity_values
+        }
+
+        df = pd.DataFrame(data)
+        df.to_excel("oceanographic_data.xlsx", index=False)
+        result_label.config(text="Veriler başarıyla Excel dosyasına kaydedildi.")
+    else:
+        result_label.config(text="Kaydedilecek veri yok.")
+
+# create_data_entry_fields fonksiyonu
+def create_data_entry_fields(frame, label_text, entry_variable):
+    label = tk.Label(frame, text=label_text)
+    label.pack(side=tk.LEFT)
+    entry = tk.Entry(frame, textvariable=entry_variable)
+    entry.pack(side=tk.LEFT)
 
 # Veri girişi ekranı açma işlevi
 def open_data_entry():
@@ -38,7 +60,6 @@ def open_data_entry():
     create_data_entry_fields(data_frame, "Sıcaklık (°C):", data_entry_variable_temperature)
 
     data_entries.append((data_entry_variable_depth, data_entry_variable_ppt, data_entry_variable_temperature))
-
 
 # Hesapla düğmesi işlevi
 def calculate_sigma_theta():
@@ -75,7 +96,6 @@ def calculate_sigma_theta():
 
     update_plots()
 
-
 # Grafik güncelleme işlevi
 def update_plots():
     plt.figure(figsize=(12, 6))
@@ -104,7 +124,6 @@ def update_plots():
     plt.tight_layout()
     plt.show()
 
-
 # root penceresini oluştur
 root = tk.Tk()
 root.title("Oceanographic Data Analyzer")
@@ -119,6 +138,10 @@ open_data_entry_button.pack()
 # Hesapla düğmesi
 calculate_button = tk.Button(root, text="Hesapla ve Grafikleri Göster", command=calculate_sigma_theta)
 calculate_button.pack()
+
+# Hesapla ve kaydet düğmesi
+save_button = tk.Button(root, text="Hesapla ve Excel'e Kaydet", command=save_to_excel)
+save_button.pack()
 
 # Sonuç etiketi
 result_label = tk.Label(root, text="Sigma-theta ve Derinlik Grafiği")
